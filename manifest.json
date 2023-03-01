@@ -1,0 +1,48 @@
+{
+    "manifest_version": 3,
+    "name": "On-Screen Chat",
+    "version": "0.1",
+    "description": "Allows user to overlay chat messages over video on streaming sites such as Twitch and YouTube.",
+    "icons": {
+        "16": "images/icon-16.png",
+        "32": "images/icon-32.png",
+        "48": "images/icon-48.png",
+        "128": "images/icon-128.png"
+    },
+    "author": "Ong Jun Hong",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_icon": {
+            "16": "images/icon-16.png",
+            "32": "images/icon-32.png",
+            "48": "images/icon-48.png",
+            "128": "images/icon-128.png"
+        }
+    },
+    "content_scripts": [
+        {
+            "js": ["scripts/content.js"],
+            "css":["scripts/style.css"],
+            "matches": [
+                "https://www.twitch.tv/*",
+                "https://www.twitch.tv/videos/*"
+            ],
+            "exclude_matches": [
+                "https://www.twitch.tv/",
+                "https://www.twitch.tv/directory*",
+                "https://www.twitch.tv/search*"
+            ]
+        }
+    ],
+    "permissions": ["tabs","storage"],
+    "commands": {
+        "_execute_action": {
+            "suggested_key": {
+                "default": "Ctrl+B",
+                "mac": "Command+B"
+            }
+        }
+    }
+}
