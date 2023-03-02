@@ -66,6 +66,7 @@ class TwitchSocket extends WebSocket {
         super("ws://irc-ws.chat.twitch.tv:80");
 
         this.port = port;
+        this.isClosed = false;
 
         // Executes when connection is opened
         this.addEventListener("open", () => {
@@ -79,7 +80,7 @@ class TwitchSocket extends WebSocket {
         this.addEventListener("message", (event) => {
             var message = this._parseChatMessage(event.data);
 
-            if (message != null) {
+            if (message != null && !this.isClosed) {
                 this._sendToScript(message);
             }
         })
@@ -88,6 +89,10 @@ class TwitchSocket extends WebSocket {
             console.log(event);
             // TODO: Send message to content script indicating error
             socket.close();
+        })
+
+        this.addEventListener("close", () => {
+            this.isClosed = true;
         })
     }
 
