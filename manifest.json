@@ -4,45 +4,38 @@
     "version": "0.1",
     "description": "Allows user to overlay chat messages over video on streaming sites such as Twitch and YouTube.",
     "icons": {
-        "16": "images/icon-16.png",
-        "32": "images/icon-32.png",
-        "48": "images/icon-48.png",
-        "128": "images/icon-128.png"
+        "16": "icons/icon-16.png",
+        "32": "icons/icon-32.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
     },
     "author": "Ong Jun Hong",
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "service-worker.js"
     },
     "action": {
         "default_icon": {
-            "16": "images/icon-16.png",
-            "32": "images/icon-32.png",
-            "48": "images/icon-48.png",
-            "128": "images/icon-128.png"
+            "16": "icons/icon-16.png",
+            "32": "icons/icon-32.png",
+            "48": "icons/icon-48.png",
+            "128": "icons/icon-128.png"
         }
     },
     "content_scripts": [
         {
-            "js": ["scripts/content.js"],
+            "js": ["scripts/content-script.js"],
             "css":["scripts/style.css"],
             "matches": [
-                "https://www.twitch.tv/*",
-                "https://www.twitch.tv/videos/*"
+                "https://www.twitch.tv/*"
             ],
             "exclude_matches": [
                 "https://www.twitch.tv/",
                 "https://www.twitch.tv/directory*",
-                "https://www.twitch.tv/search*"
+                "https://www.twitch.tv/search*",
+                "https://www.twitch.tv/videos/*"
             ]
         }
     ],
-    "permissions": ["tabs","storage"],
-    "commands": {
-        "_execute_action": {
-            "suggested_key": {
-                "default": "Ctrl+B",
-                "mac": "Command+B"
-            }
-        }
-    }
+    "permissions": ["activeTab","storage"],
+    "options_page": "options/options.html"
 }

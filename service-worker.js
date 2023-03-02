@@ -60,3 +60,84 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 // // TODO: connect to twitch websocket, send chat messages as request to content script
+class TwitchSocket extends WebSocket {
+    
+    constructor(token, user, port) {
+        super("ws://irc-ws.chat.twitch.tv:80");
+
+        this.port = port;
+
+        // Executes when connection is opened
+        this.addEventListener("open", () => {
+            this.send(`PASS oauth:${token}`);
+            this.send(`NICK ${user}`);
+            this.send("CAP REQ :twitch.tv/commands twitch.tv/tags");
+
+            this.join(port.name);
+        });
+
+        this.addEventListener("message", (event) => {
+            var message = this._parseChatMessage(event.data);
+
+            if (message != null) {
+                this._sendToScript(message);
+            }
+        })
+
+        this.addEventListener("error", (event) => {
+            console.log(event);
+            // TODO: Send message to content script indicating error
+            socket.close();
+        })
+    }
+
+    // Joins a specified channel
+    join(channel) {
+
+        // Inserts # as first character if not present 
+        if (channel[0] != "#" ) {
+            channel = `#${channel}`;
+        }
+
+        // Sends JOIN command
+        this.send(`JOIN ${channel}`);
+    }
+
+    _sendToScript(message) {
+        this.port.postMessage({data: message});
+    }
+
+    _parseChatMessage(chatMessage) {
+        var tags, host, command, message;
+        
+        if (chatMessage.startsWith("@")) {
+
+            [tags, chatMessage] = this._split(chatMessage, " ");
+            [host, chatMessage] = this._split(chatMessage, " ");
+            [command, message] = this._split(chatMessage, " :");
+
+            if (command.startsWith("PRIVMSG")) {
+                return message
+            }
+            return null
+        }
+        return null
+    }
+
+    _split(message, separator) {
+        var arr, result;
+
+        arr = message.split(separator);
+        result = arr.splice(0, 1);
+        result.push(arr.join(" "));
+
+        return result
+    }
+}
+
+chrome.runtime.onConnect.addListener(function(port) {
+    credentials = chrome.storage.local.get(["user", "token"])
+    credentials.then((response) => {
+        socket = new TwitchSocket(response.token, response.user, port);
+    })
+});
