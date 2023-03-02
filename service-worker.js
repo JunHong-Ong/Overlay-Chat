@@ -136,5 +136,8 @@ class TwitchSocket extends WebSocket {
 }
 
 chrome.runtime.onConnect.addListener(function(port) {
-    socket = new TwitchSocket("token", "user", port);
+    credentials = chrome.storage.local.get(["user", "token"])
+    credentials.then((response) => {
+        socket = new TwitchSocket(response.token, response.user, port);
+    })
 });

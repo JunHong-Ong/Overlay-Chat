@@ -36,5 +36,6 @@
             ]
         }
     ],
-    "permissions": ["tabs","storage"]
+    "permissions": ["activeTab","storage"],
+    "options_page": "options/options.html"
 }
