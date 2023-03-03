@@ -3,19 +3,28 @@
 
 <head>
     <title>My Test Extension Options</title>
+    <link rel="stylesheet" href="options.css">
     <script defer src="options.js"></script>
 </head>
 
 <body>
     <h1>Barebones Options Page</h1>
-    User:
-    <input type="text" id="user" name="user">
-    <br><br>
-    Token:
-    <input type="text" id="token" name="token">
-    <br><br>
-    <div id="status"></div>
-    <button id="save">Save</button>
+
+    <div id="credentials">
+        <h2>User Authentication</h2>
+        <div>
+            <div class="label">User:</div>
+            <div><input type="text" id="user" name="user"></div>
+        </div>
+        <div>
+            <div class="label">Token:</div>
+            <div><input type="text" id="token" name="token"></div>
+        </div>
+        <div id="status"></div>
+        <button id="save">Save</button>
+        <button id="clear">Clear</button>
+    </div>
+
 </body>
 
 </html>
