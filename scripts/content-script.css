@@ -1,11 +1,11 @@
-#pop-out-chat {
+#overlay-chat {
     background-color: rgba(0, 0, 0, 0.5);
     position: fixed;
     padding: 2px;
     z-index: 9999;
 }
 
-#pop-out-chat:hover {
+#overlay-chat:hover {
     position: absolute;
     border-style: solid;
     padding: 0px;
@@ -14,6 +14,6 @@
     cursor: move;
 }
 
-#pop-out-chat.hidden {
+#overlay-chat.hidden {
     display: none;
 }

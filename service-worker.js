@@ -6,31 +6,6 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
-chrome.runtime.onMessage.addListener( (request, sender, sendResponse) => {
-    if (request.resource === "settings") {
-        if (request.method === "GET") {
-            console.info(`Retrieving settings for ${request.params.name}.`);
-            var settings = chrome.storage.local.get(request.params.name)
-            settings.then((response) =>  {
-                if (response[request.params.name] === undefined) {
-                    console.info("Unable to find settings.");
-                    sendResponse({ statusCode: 422, message: `No settings saved for ${request.params.name}.` });
-                } else {
-                    console.info("Found settings.");
-                    sendResponse({ statusCode: 200, message: "OK", content: response[request.params.name]});
-                }
-            });
-        } else if (request.method === "POST") {
-            console.info(`Saving settings for ${request.data.name}.`);
-            chrome.storage.local.set({ [request.data.name]: request.data }).then(() => {
-                sendResponse({ statusCode: 200, message: "OK" });
-            });
-        };
-    };
-
-    return true;
-});
-
 chrome.storage.onChanged.addListener((changes, namespace) => {
     for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
         console.log(
@@ -39,6 +14,32 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         )
     }
 });
+
+// chrome.runtime.onMessage.addListener( (request, sender, sendResponse) => {
+//     if (request.resource === "settings") {
+//         if (request.method === "GET") {
+//             console.info(`Retrieving settings for ${request.params.name}.`);
+//             var settings = chrome.storage.local.get(request.params.name)
+//             settings.then((response) =>  {
+//                 if (response[request.params.name] === undefined) {
+//                     console.info("Unable to find settings.");
+//                     sendResponse({ statusCode: 422, message: `No settings saved for ${request.params.name}.` });
+//                 } else {
+//                     console.info("Found settings.");
+//                     sendResponse({ statusCode: 200, message: "OK", content: response[request.params.name]});
+//                 }
+//             });
+//         } else if (request.method === "POST") {
+//             console.info(`Saving settings for ${request.data.name}.`);
+//             chrome.storage.local.set({ [request.data.name]: request.data }).then(() => {
+//                 sendResponse({ statusCode: 200, message: "OK" });
+//             });
+//         };
+//     };
+
+//     return true;
+// });
+
 
 chrome.action.onClicked.addListener(async (tab) => {
     // Retrieve the action badge to check if the extension is 'ON' or 'OFF'
@@ -59,7 +60,6 @@ chrome.action.onClicked.addListener(async (tab) => {
     }
 });
 
-// // TODO: connect to twitch websocket, send chat messages as request to content script
 class TwitchSocket extends WebSocket {
     
     constructor(token, user, port) {
