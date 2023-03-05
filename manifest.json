@@ -26,6 +26,7 @@
         {
             "js": [
                 "scripts/twitch-socket.js",
+                "scripts/message.js",
                 "scripts/overlay-chat.js",
                 "scripts/content-script.js"
             ],

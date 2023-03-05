@@ -13,10 +13,18 @@ class TwitchSocket extends WebSocket {
         });
 
         this.addEventListener("message", (event) => {
-            var message = this._parseChatMessage(event.data);
-
-            if (message != null) {
-                console.log(message);
+            let message = new Message(event.data);
+            if (message._parsedMessage != null) {
+                if (message.command === "PRIVMSG") {
+                    let messageElement = message.display();
+                    document.querySelector("#overlay-chat").insertAdjacentElement("beforeend", messageElement);
+                    setTimeout(() => {
+                        messageElement.remove();
+                    }, 5000);
+                }
+                if (message.command === "PING") {
+                    this.send(`PONG ${message.parameters}`);
+                }
             }
         })
 
@@ -36,32 +44,5 @@ class TwitchSocket extends WebSocket {
 
         // Sends JOIN command
         this.send(`JOIN ${channel}`);
-    }
-
-    _parseChatMessage(chatMessage) {
-        var tags, host, command, message;
-        
-        if (chatMessage.startsWith("@")) {
-
-            [tags, chatMessage] = this._split(chatMessage, " ");
-            [host, chatMessage] = this._split(chatMessage, " ");
-            [command, message] = this._split(chatMessage, " :");
-
-            if (command.startsWith("PRIVMSG")) {
-                return message
-            }
-            return null
-        }
-        return null
-    }
-
-    _split(message, separator) {
-        var arr, result;
-
-        arr = message.split(separator);
-        result = arr.splice(0, 1);
-        result.push(arr.join(" "));
-
-        return result
     }
 }

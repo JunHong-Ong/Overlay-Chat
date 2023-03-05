@@ -1,7 +1,7 @@
 # On-Screen-Chat
 
 TODO:
-- Insert messages into chatbox
+- Add 
 - Allow login through popup options
 - Resizing from screen
 - Documentation

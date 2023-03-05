@@ -31,8 +31,6 @@ class OverlayChat {
     _generate() {
         const chatBox = document.createElement("div");
         chatBox.id = "overlay-chat";
-        chatBox.textContent = "Chat goes here..." // Remove in future.
-
         document.querySelector(".video-player__overlay").insertAdjacentElement("afterbegin", chatBox);
 
         return chatBox
