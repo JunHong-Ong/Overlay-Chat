@@ -1,0 +1,41 @@
+div#credentials, div#customize {
+    padding: 10px;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 10px;
+}
+
+#credentials > h2 {
+    margin: 5px;
+}
+
+#credentials > div {
+    display: block;
+    padding: 5px;
+}
+
+#credentials > div > div {
+    display: inline-block;
+    width: 50px;
+}
+
+#credentials[stored] input {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+div#testing {
+    height: 500px;
+}
+
+div#testing > div {
+    display: inline-block;
+    position: relative;
+}
+
+div#name {
+    font-size: 30px;
+}
+
+div#text {
+    font-size: 40px;
+}
