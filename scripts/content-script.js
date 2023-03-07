@@ -1,27 +1,39 @@
-let overlayChat;
+console.debug("INITIAL LOAD")
 
-function main() {
-    const broadcasterRegex = document.URL.match("(?:https://www.twitch.tv/)(?<broadcaster>.+)");
-    const broadcaster = broadcasterRegex.groups["broadcaster"];
-    overlayChat = new OverlayChat(broadcaster);
+function displayMessage(data) {
+    let messageContainer = document.createElement("div");
+    let nameContainer = document.createElement("div");
+    let textContainer = document.createElement("div");
+
+    messageContainer.id = "message";
+    nameContainer.id = "name";
+    textContainer.id = "text";
+
+    nameContainer.style.color = data.tags.color;
+    nameContainer.textContent = data.source.nick;
+
+    textContainer.textContent = data.parameters;
+
+    messageContainer.insertAdjacentElement("beforeend", nameContainer);
+    messageContainer.insertAdjacentElement("beforeend", textContainer);
+
+    return messageContainer;
 }
 
-function moveEvent(event) {
-    // Update position of overlay chat.
-    overlayChat.position = [overlayChat.posX + event.movementX, overlayChat.posY + event.movementY];
-}
+let port = chrome.runtime.connect();
+port.postMessage({ action: "SETUP" })
 
-function upEvent(event) {
-    document.removeEventListener("mouseup", upEvent);
-    document.removeEventListener("mousemove", moveEvent);
-
-    // Save new position in storage.
-}
-
-main();
-
-overlayChat.HTMLElement.addEventListener("mousedown", function (event) {
-    event.preventDefault();
-    document.addEventListener("mousemove", moveEvent);
-    document.addEventListener("mouseup", upEvent);
-})
+port.onMessage.addListener(
+    (message) => {
+        if ( message.type === "PRIVMSG" ) {
+            let container = document.querySelector("#overlay-chat");
+            let messageContainer = displayMessage(message.message);
+            container.insertAdjacentElement("beforeend",
+                messageContainer);
+            container.scrollTop = container.scrollHeight;
+            setTimeout(() => {
+                messageContainer.remove();
+            }, 5000);
+        }        
+    }
+)

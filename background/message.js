@@ -1,4 +1,4 @@
-class Message{
+export class Message{
     constructor(messageData) {
         this._messageData = messageData;
         this._parsedMessage = this._parseMessage(messageData);
@@ -283,8 +283,7 @@ class Message{
     }
 
     display() {
-        let msg = document.createElement("div");
-        msg.textContent = this.parameters;
+        let container = document.createElement("div");
 
         return msg;
     }

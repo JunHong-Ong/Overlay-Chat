@@ -1,50 +1,37 @@
-{
-    "manifest_version": 3,
-    "name": "On-Screen Chat",
+{   
+    "name": "Testing",
     "version": "0.1",
-    "description": "Allows user to overlay chat messages over video on Twitch and YouTube.",
-    "icons": {
-        "16": "icons/icon-16.png",
-        "32": "icons/icon-32.png",
-        "48": "icons/icon-48.png",
-        "128": "icons/icon-128.png"
-    },
-    "author": "Ong Jun Hong",
+    "manifest_version": 3,
     "background": {
-        "service_worker": "service-worker.js",
+        "service_worker": "background/service-worker.js",
         "type": "module"
     },
     "action": {
         "default_icon": {
-            "16": "icons/icon-16.png",
-            "32": "icons/icon-32.png",
-            "48": "icons/icon-48.png",
-            "128": "icons/icon-128.png"
+            "16": "images/icon-16.png",
+            "32": "images/icon-32.png",
+            "48": "images/icon-48.png",
+            "128": "images/icon-128.png"
         }
     },
     "content_scripts": [
         {
-            "js": [
-                "scripts/twitch-socket.js",
-                "scripts/message.js",
-                "scripts/overlay-chat.js",
-                "scripts/content-script.js"
-            ],
-            "css":[
-                "scripts/content-script.css"
-            ],
             "matches": [
-                "https://www.twitch.tv/*"
+                "https://www.twitch.tv/*",
+                "https://www.youtube.com/*"
             ],
-            "exclude_matches": [
-                "https://www.twitch.tv/",
-                "https://www.twitch.tv/directory*",
-                "https://www.twitch.tv/search*",
-                "https://www.twitch.tv/videos/*",
-                "https://www.twitch.tv/team/*"
-            ]
+            "js": ["scripts/content-script.js"],
+            "css": ["scripts/content-script.css"]
         }
     ],
-    "permissions": ["tabs","storage"],
+    "permissions": ["activeTab", "scripting"],
+    "commands": {
+        "_execute_action": {
+            "suggested_key": {
+                "default": "Ctrl+B",
+                "mac": "Command+B"
+            }
+        }
+    },
     "options_page": "options/options.html"
 }
