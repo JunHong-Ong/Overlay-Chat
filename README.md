@@ -1,7 +1,7 @@
 # On-Screen-Chat
 
 Current Progress:
-![current-progress](/demo/update-2.gif)
+![](/demo/update-2.gif)
 
 TODO:
 - Manage chat rooms automatically
