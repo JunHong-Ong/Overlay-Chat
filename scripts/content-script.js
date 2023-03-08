@@ -1,39 +1,122 @@
 console.debug("INITIAL LOAD")
 
-function displayMessage(data) {
-    let messageContainer = document.createElement("div");
-    let nameContainer = document.createElement("div");
-    let textContainer = document.createElement("div");
+let overlayChat = null;
+chrome.runtime.onMessage.addListener(
+    (message) => {
+        if ( message.action === "SETUP" ) {
+            if ( overlayChat === null ){
+                overlayChat = new OverlayChat();
 
-    messageContainer.id = "message";
-    nameContainer.id = "name";
-    textContainer.id = "text";
+                overlayChat.HTMLElement.addEventListener("mousemove", (event) => {
+                    if ( event.ctrlKey && event.shiftKey ) {
+                        if ( event.offsetX < 4 && event.offsetY < 4 || event.offsetX > overlayChat.width - 4 && event.offsetY > overlayChat.height - 4) {
+                            overlayChat.HTMLElement.classList.toggle("nwse-resize", true);
+                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("move", false);
+                        } else if ( event.offsetX > overlayChat.width - 4 && event.offsetY < 4 || event.offsetX < 4 && event.offsetY > overlayChat.height - 4 ) {
+                            overlayChat.HTMLElement.classList.toggle("nesw-resize", true);
+                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("move", false);
+                        } else if ( event.offsetX < 4 || event.offsetX > overlayChat.width - 4 ) {
+                            overlayChat.HTMLElement.classList.toggle("ew-resize", true);
+                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("move", false);
+                        } else if ( event.offsetY < 4 || event.offsetY > overlayChat.height - 4 ) {
+                            overlayChat.HTMLElement.classList.toggle("ns-resize", true);
+                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("move", false);
+                        } else {
+                            overlayChat.HTMLElement.classList.toggle("move", true);
+                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
+                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
+                        }
+                    }
+                })
 
-    nameContainer.style.color = data.tags.color;
-    nameContainer.textContent = data.source.nick;
+                overlayChat.HTMLElement.addEventListener("mouseleave", (event) => {
+                    overlayChat.HTMLElement.classList.toggle("ew-resize", false);
+                    overlayChat.HTMLElement.classList.toggle("ns-resize", false);
+                    overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
+                    overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
+                    overlayChat.HTMLElement.classList.toggle("move", false);
+                })
+                
+                overlayChat.HTMLElement.addEventListener("mousedown", (event) => {
+                    event.preventDefault();
+                    if ( event.ctrlKey && event.shiftKey ) {
+                        if ( event.offsetX < 4 && event.offsetY < 4 ) {
+                            document.addEventListener("mousemove", resizeXLeft);
+                            document.addEventListener("mousemove", resizeYTop);
+                        } else if ( event.offsetX > overlayChat.width - 4 && event.offsetY < 4 ) {
+                            document.addEventListener("mousemove", resizeXRight);
+                            document.addEventListener("mousemove", resizeYTop);
+                        } else if ( event.offsetX > overlayChat.width - 4 && event.offsetY > overlayChat.height - 4 ) {
+                            document.addEventListener("mousemove", resizeXRight);
+                            document.addEventListener("mousemove", resizeYBottom);
+                        } else if ( event.offsetX < 4 && event.offsetY > overlayChat.height - 4 ) {
+                            document.addEventListener("mousemove", resizeXLeft);
+                            document.addEventListener("mousemove", resizeYBottom);
+                        } else if ( event.offsetX < 4 ) {
+                            document.addEventListener("mousemove", resizeXLeft);
+                        } else if ( event.offsetX > overlayChat.width - 4 ) {
+                            document.addEventListener("mousemove", resizeXRight);
+                        } else if ( event.offsetY < 4 ) {
+                            document.addEventListener("mousemove", resizeYTop);
+                        } else if ( event.offsetY > overlayChat.height - 4 ) {
+                            document.addEventListener("mousemove", resizeYBottom);
+                        } else {
+                            document.addEventListener("mousemove", moveEvent);
 
-    textContainer.textContent = data.parameters;
-
-    messageContainer.insertAdjacentElement("beforeend", nameContainer);
-    messageContainer.insertAdjacentElement("beforeend", textContainer);
-
-    return messageContainer;
-}
+                        }
+                        document.addEventListener("mouseup", stopMovement);
+                    }
+                });  
+            }
+        }
+    }
+)
 
 let port = chrome.runtime.connect();
-port.postMessage({ action: "SETUP" })
-
 port.onMessage.addListener(
     (message) => {
         if ( message.type === "PRIVMSG" ) {
-            let container = document.querySelector("#overlay-chat");
-            let messageContainer = displayMessage(message.message);
-            container.insertAdjacentElement("beforeend",
-                messageContainer);
-            container.scrollTop = container.scrollHeight;
-            setTimeout(() => {
-                messageContainer.remove();
-            }, 5000);
-        }        
+            overlayChat.insertMessage(message.message);
+        }
     }
 )
+
+function moveEvent(event) {
+    overlayChat.position = [overlayChat.posX + event.movementX, overlayChat.posY + event.movementY];
+}
+function resizeXLeft(event) {
+    overlayChat.size = [overlayChat.height, overlayChat.width - event.movementX];
+    overlayChat.position = [overlayChat.posX + event.movementX, overlayChat.posY];
+}
+function resizeXRight(event) {
+    overlayChat.size = [overlayChat.height, overlayChat.width + event.movementX]
+}
+function resizeYTop(event) {
+    overlayChat.size = [overlayChat.height - event.movementY, overlayChat.width]
+    overlayChat.position = [overlayChat.posX, overlayChat.posY + event.movementY];
+}
+function resizeYBottom(event) {
+    overlayChat.size = [overlayChat.height + event.movementY, overlayChat.width]
+}
+function stopMovement(event) {
+    document.removeEventListener("mousemove", resizeXLeft);
+    document.removeEventListener("mousemove", resizeXRight);
+    document.removeEventListener("mousemove", resizeYTop);
+    document.removeEventListener("mousemove", resizeYBottom);
+    document.removeEventListener("mousemove", moveEvent);
+    document.removeEventListener("mouseup", stopMovement);
+}
