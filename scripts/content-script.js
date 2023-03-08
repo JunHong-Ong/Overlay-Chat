@@ -1,39 +1,61 @@
 console.debug("INITIAL LOAD")
 
-function displayMessage(data) {
-    let messageContainer = document.createElement("div");
-    let nameContainer = document.createElement("div");
-    let textContainer = document.createElement("div");
+let overlayChat = null;
+chrome.runtime.onMessage.addListener(
+    (message) => {
+        if ( message.action === "SETUP" ) {
+            if ( overlayChat === null ){
+                overlayChat = new OverlayChat();
 
-    messageContainer.id = "message";
-    nameContainer.id = "name";
-    textContainer.id = "text";
-
-    nameContainer.style.color = data.tags.color;
-    nameContainer.textContent = data.source.nick;
-
-    textContainer.textContent = data.parameters;
-
-    messageContainer.insertAdjacentElement("beforeend", nameContainer);
-    messageContainer.insertAdjacentElement("beforeend", textContainer);
-
-    return messageContainer;
-}
+                overlayChat.HTMLElement.addEventListener("mousedown", function (event) {
+                    event.preventDefault();
+                    if ( event.ctrlKey && event.shiftKey ) {
+                        if ( event.offsetX < 4 ) {
+                            document.onmousemove = resizeXLeft;
+                        } else if ( event.offsetX > overlayChat.width - 4 ) {
+                            document.onmousemove = resizeXRight;
+                        } else if ( event.offsetY < 4 ) {
+                            document.onmousemove = resizeYTop;
+                        } else if ( event.offsetY > overlayChat.height - 4 ) {
+                            document.onmousemove = resizeYBottom;
+                        } else {
+                            document.onmousemove = moveEvent;
+                        }
+                        document.onmouseup = stopMovement;
+                    }
+                });  
+            }
+        }
+    }
+)
 
 let port = chrome.runtime.connect();
-port.postMessage({ action: "SETUP" })
-
 port.onMessage.addListener(
     (message) => {
         if ( message.type === "PRIVMSG" ) {
-            let container = document.querySelector("#overlay-chat");
-            let messageContainer = displayMessage(message.message);
-            container.insertAdjacentElement("beforeend",
-                messageContainer);
-            container.scrollTop = container.scrollHeight;
-            setTimeout(() => {
-                messageContainer.remove();
-            }, 5000);
+            overlayChat.insertMessage(message.message);
         }        
     }
 )
+
+function moveEvent(event) {
+    overlayChat.position = [overlayChat.posX + event.movementX, overlayChat.posY + event.movementY];
+}
+function resizeXLeft(event) {
+    overlayChat.size = [overlayChat.height, overlayChat.width - event.movementX];
+    overlayChat.position = [overlayChat.posX + event.movementX, overlayChat.posY];
+}
+function resizeXRight(event) {
+    overlayChat.size = [overlayChat.height, overlayChat.width + event.movementX]
+}
+function resizeYTop(event) {
+    overlayChat.size = [overlayChat.height - event.movementY, overlayChat.width]
+    overlayChat.position = [overlayChat.posX, overlayChat.posY + event.movementY];
+}
+function resizeYBottom(event) {
+    overlayChat.size = [overlayChat.height + event.movementY, overlayChat.width]
+}
+function stopMovement(event) {
+    document.onmouseup = null;
+    document.onmousemove = null;
+}

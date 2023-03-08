@@ -9,18 +9,6 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
-function injectedFunction() {
-    let videoContainer = document.querySelector(".video-player__overlay");
-
-    if ( document.querySelector("#overlay-chat") === null) {
-        let tempElement = document.createElement("div");
-        tempElement.id = "overlay-chat";
-        videoContainer.insertAdjacentElement("beforeend", tempElement)
-    }
-
-    return;
-}
-
 chrome.action.onClicked.addListener(async (tab) => {
     if ( a.exec(tab.url) !== null ) {
         // Retrieve the action badge to check if the extension is 'ON' or 'OFF'
@@ -36,15 +24,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 
         if ( nextState === "ON" ) {
 
-            // Injects chat container if it doesnt exist
-            chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                func : injectedFunction
-            }).then(
-                console.debug("Registered script.")
-            );
-            
-
+            chrome.tabs.sendMessage(tab.id, { action: "SETUP" });
             const url = new URL(tab.url);
             const broadcaster = url.pathname.replace("/", "");
             console.log(openConnections);

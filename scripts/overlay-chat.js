@@ -5,27 +5,45 @@ class OverlayChat {
      * 
      * The class stores display properties of the overlay chat.
      * 
-     * @param {string}    broadcaster      The name of the broadcaster.
      * @param {number[]} [position=[0, 0]] The position of the HTML element in px expressed as [x, y].
      * @param {number[]} [size=[300, 200]] The size of the HTML element in px expressed as [height, width].
      */
-    constructor(broadcaster, position=[0, 0], size=[300, 200]) {
-
-        this.broadcaster = broadcaster;
-        
+    constructor(position=[0, 0], size=[300, 200]) {
         console.debug("Creating new overlay chat object.");
         this._position = position;
         this._size = size;
-        this.isVisible = true;
-        this.isDraggable = true;
+        this._isVisible = true;
+        this._isDraggable = true;
 
         this.HTMLElement = this._generate();
         this._updatePosition();
         this._updateSize();
+    }
 
-        this.messages = [];
-        this.socket = new TwitchSocket("token", "user", this.broadcaster);
+    insertMessage(messageData) {
+        let messageContainer = document.createElement("div");
+        let nameContainer = document.createElement("div");
+        let textContainer = document.createElement("div");
 
+        messageContainer.id = "message";
+        nameContainer.id = "name";
+        textContainer.id = "text";
+
+        nameContainer.style.color = messageData.tags.color;
+        nameContainer.textContent = messageData.source.nick;
+
+        textContainer.textContent = messageData.parameters;
+
+        messageContainer.insertAdjacentElement("beforeend", nameContainer);
+        messageContainer.insertAdjacentElement("beforeend", textContainer);
+
+        this.HTMLElement.insertAdjacentElement("beforeend", messageContainer);
+
+        setTimeout(() => {
+            messageContainer.remove();
+        }, 5000);
+
+        this.HTMLElement.scrollTop = this.HTMLElement.scrollHeight;
     }
 
     _generate() {
@@ -58,24 +76,13 @@ class OverlayChat {
         this.HTMLElement.style.top = this.posY + "px";
     }
 
-    _updateSize() {
-        // Updates size of overlay chat.
-        this.HTMLElement.style.width = this.width + "px";
-        this.HTMLElement.style.height = this.height + "px";
-    }
-
     /**
-     * Gets the height of the HTML element in px.
+     * Sets the position of the HTML element.
+     * @param {number[]} position The position of the HTML element in px expressed as [x, y].
      */
-    get height() {
-        return this._size[0];
-    }
-
-    /**
-     * Gets the width of the HTML element in px.
-     */
-    get width() {
-        return this._size[1];
+    set position(position) {
+        this._position = this._checkPosition(position);
+        this._updatePosition();
     }
 
     /**
@@ -92,13 +99,10 @@ class OverlayChat {
         return this._position[1];
     }
 
-    /**
-     * Sets the position of the HTML element.
-     * @param {number[]} position The position of the HTML element in px expressed as [x, y].
-     */
-    set position(position) {
-        this._position = this._checkPosition(position);
-        this._updatePosition();
+    _updateSize() {
+        // Updates size of overlay chat.
+        this.HTMLElement.style.width = this.width + "px";
+        this.HTMLElement.style.height = this.height + "px";
     }
 
     /**
@@ -108,5 +112,19 @@ class OverlayChat {
     set size(size) {
         this._size = size;
         this._updateSize();
+    }
+
+    /**
+     * Gets the height of the HTML element in px.
+     */
+    get height() {
+        return this._size[0];
+    }
+
+    /**
+     * Gets the width of the HTML element in px.
+     */
+    get width() {
+        return this._size[1];
     }
 }
