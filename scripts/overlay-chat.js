@@ -71,7 +71,6 @@ class OverlayChat {
     }
 
     _updatePosition() {
-        // Updates position of overlay chat.
         this.HTMLElement.style.left = this.posX + "px";
         this.HTMLElement.style.top = this.posY + "px";
     }
@@ -99,6 +98,21 @@ class OverlayChat {
         return this._position[1];
     }
 
+    _checkSize(size) {
+        let [height, width] = size;
+
+        const minWidth = 0, minHeight = 0;
+        const maxHeight = this.HTMLElement.parentElement.clientHeight - this.posY;
+        const maxWidth = this.HTMLElement.parentElement.clientWidth - this.posX;
+
+        height = height < minHeight ? minHeight : height;
+        width = width < minWidth ? minWidth : width;
+        height = height > maxHeight ? maxHeight : height;
+        width = width > maxWidth ? maxWidth : width;
+
+        return [height, width]
+    }
+
     _updateSize() {
         // Updates size of overlay chat.
         this.HTMLElement.style.width = this.width + "px";
@@ -110,7 +124,7 @@ class OverlayChat {
      * @param {number[]} size The size of the HTML element in px expressed as [height, width].
      */
     set size(size) {
-        this._size = size;
+        this._size = this._checkSize(size);
         this._updateSize();
     }
 

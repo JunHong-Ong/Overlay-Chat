@@ -1,10 +1,9 @@
 # On-Screen-Chat
 
 Current Progress:
-![in-progress](/demo/in-progress.gif)
+![current-progress](/demo/update-2.gif)
 
 TODO:
-- Resizing from screen
 - Manage chat rooms automatically
 - Documentation
 - Parse emotes
