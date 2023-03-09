@@ -23,11 +23,8 @@ chrome.action.onClicked.addListener(async (tab) => {
         });
 
         if ( nextState === "ON" ) {
-
-            chrome.tabs.sendMessage(tab.id, { action: "SETUP" });
             const url = new URL(tab.url);
             const broadcaster = url.pathname.replace("/", "");
-            console.log(openConnections);
             let socket = openConnections[tab.id].socket;
             socket.broadcaster = broadcaster;
             console.debug(`JOINING ${broadcaster}`);

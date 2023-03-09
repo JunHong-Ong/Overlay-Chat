@@ -15,18 +15,3 @@
     border-width: 2px;
     border-color: red;
 }
-#overlay-chat.ew-resize {
-    cursor: ew-resize;
-}
-#overlay-chat.ns-resize {
-    cursor: ns-resize;
-}
-#overlay-chat.nesw-resize {
-    cursor: nesw-resize;
-}
-#overlay-chat.nwse-resize {
-    cursor: nwse-resize;
-}
-#overlay-chat.move {
-    cursor: move;
-}
