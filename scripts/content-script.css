@@ -1,17 +1,22 @@
-#overlay-chat {
-    background-color: rgba(0, 0, 0, 0.5);
-    position: fixed;
-    padding: 2px;
-    z-index: 9999;
-    height: 400px;
+overlay-chat {
+    
     width: 200px;
+    height: 300px;
+    box-sizing: content-box;
+
+    display: block;
+    position: fixed;
+    z-index: 9999;
     overflow-y: hidden;
+
+    background-color: rgba(0, 0, 0, 0.5);
+    background-clip: padding-box;
+    
+    border-width: 10px;
+    border-style: solid;
+    border-color: transparent;
 }
 
-#overlay-chat:hover {
+overlay-chat:hover {
     position: absolute;
-    border-style: solid;
-    padding: 0px;
-    border-width: 2px;
-    border-color: red;
 }
