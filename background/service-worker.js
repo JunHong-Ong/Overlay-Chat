@@ -40,26 +40,50 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 let openConnections = {}
 
+chrome.runtime.onMessage.addListener(
+    (message, sender, sendResponse) => {
+        if ( message === "Setup Socket" ) {
+            chrome.storage.local.get("credentials")
+                .then((response) => {
+                    const socket = new TwitchSocket(response.credentials.token, response.credentials.user, openConnections[sender.tab.id]["port"]);
+                    openConnections[sender.tab.id]["socket"] = socket;
+                    socket.addEventListener("open", () => sendResponse("Completed"));
+                })
+        }
+
+        return true;
+    }
+)
+
 chrome.runtime.onConnect.addListener(
     (port) => {
+        const tabId = port.sender.tab.id;
+        openConnections[tabId] = {};
+
         console.debug(`Opened PORT for tab ID: ${port.sender.tab.id} (index: ${port.sender.tab.index})`);
+        openConnections[tabId]["port"] = port;
 
-        chrome.storage.local.get("credentials").then(
-            (response) => {
-                const socket = new TwitchSocket(response.credentials.token, response.credentials.user, port);
-                openConnections[port.sender.tab.id] = {
-                    port: port,
-                    socket: socket
-                };
+        // Shuts down socket when port disconnects
+        port.onDisconnect.addListener(
+            (port) => {
+                console.debug("Shutting down SOCKET for tab ID: {");
+                let connection = openConnections[port.sender.tab.id]
+                connection.socket.part(); //ERROR LINE
+                connection.socket.close();
+            }
+        )
 
-                // Shuts down socket when port disconnects
-                port.onDisconnect.addListener(
-                    (port) => {
-                        console.debug("Shutting down SOCKET for tab ID: {");
-                        socket.part();
-                        socket.close();
+        port.onMessage.addListener(
+            (message, port, sendResponse) => {
+                if ( message.action === "JOIN" ) {
+                    let connection = openConnections[port.sender.tab.id];
+                    connection.socket.broadcaster = message.broadcaster;
+                } else if ( message.action === "PART" ) {
+                    let connection = openConnections[port.sender.tab.id];
+                    if ( connection !== undefined ) {
+                        connection.socket.part();
                     }
-                )
+                }
             }
         )
     }

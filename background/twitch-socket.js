@@ -36,7 +36,8 @@ export class TwitchSocket extends WebSocket {
     join() {
         if (!this.connected) {
             this.send(`JOIN #${this._broadcaster}`);
-            this.connected = true;                
+            this.connected = true;
+            console.debug(`JOIN ${this._broadcaster}`)
         }
     }
 
@@ -44,6 +45,7 @@ export class TwitchSocket extends WebSocket {
         if (this.connected) {
             this.send(`PART #${this._broadcaster}`);
             this.connected = false;
+            console.debug(`PART ${this._broadcaster}`)
         }
     }
 

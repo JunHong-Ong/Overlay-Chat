@@ -17,8 +17,7 @@
     "content_scripts": [
         {
             "matches": [
-                "https://www.twitch.tv/*",
-                "https://www.youtube.com/*"
+                "https://www.twitch.tv/*"
             ],
             "js": [
                 "node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
