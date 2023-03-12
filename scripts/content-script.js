@@ -1,122 +1,101 @@
-console.debug("INITIAL LOAD")
+var overlayChat, port;
 
-let overlayChat = null;
-chrome.runtime.onMessage.addListener(
-    (message) => {
-        if ( message.action === "SETUP" ) {
-            if ( overlayChat === null ){
-                overlayChat = new OverlayChat();
+customElements.define("overlay-chat", OverlayChat);
+let disallowedUrls = new RegExp("(www\.twitch\.tv\/)($|directory.*|search.*|videos.*|team.*)");
 
-                overlayChat.HTMLElement.addEventListener("mousemove", (event) => {
-                    if ( event.ctrlKey && event.shiftKey ) {
-                        if ( event.offsetX < 4 && event.offsetY < 4 || event.offsetX > overlayChat.width - 4 && event.offsetY > overlayChat.height - 4) {
-                            overlayChat.HTMLElement.classList.toggle("nwse-resize", true);
-                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("move", false);
-                        } else if ( event.offsetX > overlayChat.width - 4 && event.offsetY < 4 || event.offsetX < 4 && event.offsetY > overlayChat.height - 4 ) {
-                            overlayChat.HTMLElement.classList.toggle("nesw-resize", true);
-                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("move", false);
-                        } else if ( event.offsetX < 4 || event.offsetX > overlayChat.width - 4 ) {
-                            overlayChat.HTMLElement.classList.toggle("ew-resize", true);
-                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("move", false);
-                        } else if ( event.offsetY < 4 || event.offsetY > overlayChat.height - 4 ) {
-                            overlayChat.HTMLElement.classList.toggle("ns-resize", true);
-                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("move", false);
-                        } else {
-                            overlayChat.HTMLElement.classList.toggle("move", true);
-                            overlayChat.HTMLElement.classList.toggle("ew-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("ns-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
-                            overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
-                        }
-                    }
-                })
+function portMessageHandler(message) {
+    if ( message.type === "PRIVMSG" ) {
+        globalThis.overlayChat.insertMessage(message.message);
+    } else {
+        console.debug(message);
+    }
+}
 
-                overlayChat.HTMLElement.addEventListener("mouseleave", (event) => {
-                    overlayChat.HTMLElement.classList.toggle("ew-resize", false);
-                    overlayChat.HTMLElement.classList.toggle("ns-resize", false);
-                    overlayChat.HTMLElement.classList.toggle("nesw-resize", false);
-                    overlayChat.HTMLElement.classList.toggle("nwse-resize", false);
-                    overlayChat.HTMLElement.classList.toggle("move", false);
-                })
-                
-                overlayChat.HTMLElement.addEventListener("mousedown", (event) => {
-                    event.preventDefault();
-                    if ( event.ctrlKey && event.shiftKey ) {
-                        if ( event.offsetX < 4 && event.offsetY < 4 ) {
-                            document.addEventListener("mousemove", resizeXLeft);
-                            document.addEventListener("mousemove", resizeYTop);
-                        } else if ( event.offsetX > overlayChat.width - 4 && event.offsetY < 4 ) {
-                            document.addEventListener("mousemove", resizeXRight);
-                            document.addEventListener("mousemove", resizeYTop);
-                        } else if ( event.offsetX > overlayChat.width - 4 && event.offsetY > overlayChat.height - 4 ) {
-                            document.addEventListener("mousemove", resizeXRight);
-                            document.addEventListener("mousemove", resizeYBottom);
-                        } else if ( event.offsetX < 4 && event.offsetY > overlayChat.height - 4 ) {
-                            document.addEventListener("mousemove", resizeXLeft);
-                            document.addEventListener("mousemove", resizeYBottom);
-                        } else if ( event.offsetX < 4 ) {
-                            document.addEventListener("mousemove", resizeXLeft);
-                        } else if ( event.offsetX > overlayChat.width - 4 ) {
-                            document.addEventListener("mousemove", resizeXRight);
-                        } else if ( event.offsetY < 4 ) {
-                            document.addEventListener("mousemove", resizeYTop);
-                        } else if ( event.offsetY > overlayChat.height - 4 ) {
-                            document.addEventListener("mousemove", resizeYBottom);
-                        } else {
-                            document.addEventListener("mousemove", moveEvent);
+let lastUrl = location.href;
 
-                        }
-                        document.addEventListener("mouseup", stopMovement);
-                    }
-                });  
+new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+        lastUrl = url;
+        onUrlChange();
+    }
+}).observe(document, {subtree: true, childList: true});
+
+function onUrlChange() {
+    port.postMessage({ action:"PART" });
+
+    if ( disallowedUrls.exec(location.href) === null ) {
+        const url = new URL(location.href);
+        const broadcaster = url.pathname.replace("/", "")
+
+        if ( document.querySelector("overlay-chat") === null ) {
+            overlayChat = document.createElement("overlay-chat");
+            document.querySelector(".video-player__overlay").insertAdjacentElement("afterbegin", overlayChat);
+        }
+        port.postMessage({ action:"JOIN", broadcaster:broadcaster });
+    }
+}
+
+
+function setUpPort(resolve, reject) {
+    port = chrome.runtime.connect();
+    port.onMessage.addListener(portMessageHandler);
+    port = port;
+    console.debug("Completed: Port Setup.");
+
+    chrome.runtime.sendMessage("Setup Socket")
+        .then((response) => {
+            if ( response === "Completed" ) {
+                console.debug("Completed: Socket Setup.")
+                resolve();
             }
+        })
+}
+
+function checkUrl() {
+    let disallowedUrls = new RegExp("(www\.twitch\.tv\/)($|directory.*|search.*|videos.*|team.*)");
+    const isAllowed = disallowedUrls.exec(location.href) === null
+    
+    return isAllowed;
+}
+
+function createElement(isAllowed) {
+
+    if ( isAllowed ) {
+        if ( document.querySelector("overlay-chat") === null ) {
+            overlayChat = document.createElement("overlay-chat");
+            document.querySelector(".video-player__overlay").insertAdjacentElement("afterbegin", overlayChat);
+            console.debug("Completed: Insert Element.")
+        } else {
+            console.debug("Element already exists.")
         }
     }
-)
 
-let port = chrome.runtime.connect();
-port.onMessage.addListener(
-    (message) => {
-        if ( message.type === "PRIVMSG" ) {
-            overlayChat.insertMessage(message.message);
-        }
+    return isAllowed;
+}
+
+function joinChannel(isAllowed) {
+    const url = new URL(location.href);
+    const broadcaster = url.pathname.replace("/", "");
+
+    if ( isAllowed ) {
+        console.debug("URL allowed. Joining channel...");
+        port.postMessage({ action: "JOIN", broadcaster: broadcaster });
     }
-)
+    
+    return;
+}
 
-function moveEvent(event) {
-    overlayChat.position = [overlayChat.posX + event.movementX, overlayChat.posY + event.movementY];
+function leaveChannel() {
+    port.postMessage({ action: "PART" });
 }
-function resizeXLeft(event) {
-    overlayChat.size = [overlayChat.height, overlayChat.width - event.movementX];
-    overlayChat.position = [overlayChat.posX + event.movementX, overlayChat.posY];
-}
-function resizeXRight(event) {
-    overlayChat.size = [overlayChat.height, overlayChat.width + event.movementX]
-}
-function resizeYTop(event) {
-    overlayChat.size = [overlayChat.height - event.movementY, overlayChat.width]
-    overlayChat.position = [overlayChat.posX, overlayChat.posY + event.movementY];
-}
-function resizeYBottom(event) {
-    overlayChat.size = [overlayChat.height + event.movementY, overlayChat.width]
-}
-function stopMovement(event) {
-    document.removeEventListener("mousemove", resizeXLeft);
-    document.removeEventListener("mousemove", resizeXRight);
-    document.removeEventListener("mousemove", resizeYTop);
-    document.removeEventListener("mousemove", resizeYBottom);
-    document.removeEventListener("mousemove", moveEvent);
-    document.removeEventListener("mouseup", stopMovement);
-}
+
+
+new Promise(setUpPort)
+    .then(checkUrl)
+    .then(createElement)
+    .then(joinChannel)
+    .catch((error) => {
+        console.error(`Initial setup failed: ${error}`);
+    })
+    .finally(() => console.log("All done"));

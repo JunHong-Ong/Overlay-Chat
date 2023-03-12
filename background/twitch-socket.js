@@ -34,12 +34,19 @@ export class TwitchSocket extends WebSocket {
     }
 
     join() {
-        this.send(`JOIN #${this._broadcaster}`);
-        
+        if (!this.connected) {
+            this.send(`JOIN #${this._broadcaster}`);
+            this.connected = true;
+            console.debug(`JOIN ${this._broadcaster}`)
+        }
     }
 
     part() {
-        this.send(`PART #${this._broadcaster}`);
+        if (this.connected) {
+            this.send(`PART #${this._broadcaster}`);
+            this.connected = false;
+            console.debug(`PART ${this._broadcaster}`)
+        }
     }
 
     set broadcaster(value) {
